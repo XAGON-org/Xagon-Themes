@@ -1,0 +1,258 @@
+{% style %}
+      .cover-image-container{
+        width: 100vw;
+        height: max-content;
+        max-height: 40vw;
+    overflow: hidden;
+      }
+      .giveaway-heading{
+        text-align: center;
+        font-weight: 600;
+        font-size: 4rem;
+        margin: 2rem 0 0;
+        padding:.5rem 1.5rem;
+      }
+      .giveaway-description{
+        text-align: center;
+        margin: 0;
+
+        padding:.5rem 2.5rem;
+      }
+    .giveaway-Form{
+      padding: 5rem 10%;
+      display: grid;
+      row-gap: .8rem;
+    }
+    .giveaway-input{
+      border: 2px solid #000;
+      background: #FFF;
+      border-radius: 0;
+      padding: 1rem;
+      width: 42%;
+      margin: auto .5rem;
+      font-size: 1.6rem;
+    }
+  .giveaway-btn{
+    width: 14rem;
+    display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border: 0;
+      padding: 2rem 3rem;
+      cursor: pointer;
+      font: inherit;
+      font-size: 1.5rem;
+      text-decoration: none;
+      color: rgb(var(--color-button-text));
+      transition: box-shadow var(--duration-short) ease;
+      -webkit-appearance: none;
+      appearance: none;
+      background-color: rgba(var(--color-button), var(--alpha-button-background));
+  }
+      .custom-radio-buttons{
+        margin: auto 0 1.5rem;
+      }
+  .giveaway-cover-image{
+    width:100%;
+  }
+
+      .giveaway-label, .giveaway-label-radio {
+        opacity: 1;
+      }
+
+   @media screen and (max-width: 750px) {
+     .giveaway-input{
+       width: 100%;
+
+
+     }
+     .giveaway-Form{
+      padding: 5rem 8%;
+     }
+   }
+{% endstyle %}
+
+<div class="giveaway">
+  {% if section.blocks[0].settings.image %}
+    <div class="cover-image-container">
+      <img
+        class="giveaway-cover-image"
+        src="{{ section.blocks[0].settings.image | img_url: 'master' }}"
+        alt="Giveaway Image"
+      >
+    </div>
+  {% endif %}
+
+  <h2 class="giveaway-heading">{{ section.settings.form_title }}</h2>
+  <p class="giveaway-description">{{ section.settings.form_description }}</p>
+
+  <form method="post" action="https://usebasin.com/f/37d5670ff576" accept-charset="UTF-8">
+    {% if customer %}
+      <input type="hidden" name="name" value="{{ customer.first_name }} {{ customer.last_name }}">
+      <input type="hidden" name="email" value="{{ customer.email }}">
+    {% else %}
+      <p>Please log in to participate in the giveaway.</p>
+    {% endif %}
+    {%- if form.posted_successfully? -%}
+      <h2 class="form-status form-status-list form__message" tabindex="-1" autofocus>
+        {% render 'icon-success' %}
+        {{ 'templates.contact.form.post_success' | t }}
+      </h2>
+    {%- elsif form.errors -%}
+      <div class="form__message">
+        <h2 class="form-status caption-large text-body" role="alert" tabindex="-1" autofocus>
+          {% render 'icon-error' %}
+          {{ 'templates.contact.form.error_heading' | t }}
+        </h2>
+      </div>
+      <ul class="form-status-list caption-large" role="list">
+        <li>
+          <a href="#ContactForm-email" class="link">
+            {{ form.errors.translated_fields.email | capitalize }}
+            {{ form.errors.messages.email }}
+          </a>
+        </li>
+      </ul>
+    {%- endif -%}
+    <!-- <form class="giveaway-Form" method="post" action="/contact" accept-charset="UTF-8"> -->
+    <div class="giveaway-Form">
+      <input type="hidden" name="form_type" value="contact">
+      <input type="hidden" name="utf8" value="✓">
+
+      {% for block in section.blocks %}
+        {% if block.type == 'text' %}
+          <label class="giveaway-label">{{ block.settings.label }}</label>
+          <input class="giveaway-input" type="text" placeholder="@Username" name="contact[{{ block.id }}]" required>
+
+        {% elsif block.type == 'textarea' %}
+          <label class="giveaway-label">{{ block.settings.label }}</label>
+          <textarea
+            class="giveaway-input"
+            name="contact[{{ block.id }}]"
+            rows="5"
+            minlength="150"
+            placeholder="minimum 150 words"
+            required
+          ></textarea>
+
+        {% elsif block.type == 'radio' %}
+          <label class="giveaway-label-radio">{{ block.settings.question }}</label>
+          <div class="custom-radio-buttons">
+            {% assign options = block.settings.options | split: ',' %}
+            {% for option in options %}
+              <label class="giveaway-label-radio">
+                <input
+                  class="giveaway-input2"
+                  type="radio"
+                  name="contact[{{ block.id }}]"
+                  value="{{ option }}"
+                  required
+                >
+                {{ option }} </label
+              ><br>
+            {% endfor %}
+          </div>
+
+        {% elsif block.type == 'richtext' %}
+          <div class="rich-text-content">
+            {{ block.settings.rich_text }}
+          </div>
+        {% endif %}
+      {% endfor %}
+      <button class="giveaway-btn" type="submit">Submit</button>
+    </div>
+  </form>
+</div>
+
+{% schema %}
+{
+  "name": "Giveaway",
+  "settings": [
+    {
+      "id": "form_title",
+      "type": "text",
+      "label": "Form Title",
+      "default": "Giveaway"
+    },
+    {
+      "id": "form_description",
+      "type": "textarea",
+      "label": "Form Description",
+      "default": "Complete the following tasks to enter the giveaway!"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Giveaway Image",
+      "settings": [
+        {
+          "id": "image",
+          "type": "image_picker",
+          "label": "Upload Giveaway Image"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Question Text Field",
+      "settings": [
+        {
+          "id": "label",
+          "type": "text",
+          "label": "Question",
+          "default": "Enter your Questions"
+        }
+      ]
+    },
+    {
+      "type": "textarea",
+      "name": "Question Text Area",
+      "settings": [
+        {
+          "id": "label",
+          "type": "text",
+          "label": "Question",
+          "default": "Enter your Questions"
+        }
+      ]
+    },
+    {
+      "type": "radio",
+      "name": "Multiple Choice Question",
+      "settings": [
+        {
+          "id": "question",
+          "type": "text",
+          "label": "Question",
+          "default": "Enter your Questions"
+        },
+        {
+          "id": "options",
+          "type": "text",
+          "label": "Options (comma-separated)",
+          "default": "Option 1,Option 2,Option 3,Option 4"
+        }
+      ]
+    },
+    {
+      "type": "richtext",
+      "name": "Rich Text Description",
+      "settings": [
+        {
+          "id": "rich_text",
+          "type": "richtext",
+          "label": "Enter Rich Text Content",
+          "default": "<p><strong>Bold text</strong> and <em>italic text</em>!</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Giveaway",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}

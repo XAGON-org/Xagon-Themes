@@ -1,0 +1,81 @@
+  
+{% if collection.metafields.custom.subcategories.value.count > 0 %}
+
+  <div id="subcategory-filters">
+                           <p> {{ collection.metafields.custom.subcategories.title }}</p>
+    
+    {% for sub in collection.metafields.custom.subcategories.value %}
+      <button class="subcategory-btn" data-collection="{{ sub.collection_url_name }}">
+                                      {{ sub.collection }}
+                                      {{ sub.collection }}
+        {% if sub.image != blank %}
+          <img src="{{ sub.image | file_url }}" alt="{{ sub.title }}" width="50">
+        {% endif %}
+        {{ sub.title }}
+      </button>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div id="collection-products">
+  {% for product in collection.products %}
+    <div class="product-item" data-collection="{{ collection.handle }}">
+      {{ collection }}
+      <img src="{{ product.featured_image | img_url: 'medium' }}" alt="{{ product.title }}">
+      <p>{{ product.title }}</p>
+    </div>
+  {% endfor %}
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".subcategory-btn").forEach((button) => {
+    button.addEventListener("click", function () {
+      let collectionHandle = this.getAttribute("data-collection");
+        console.log('Collection Handle:', collectionHandle);
+      
+      let productContainer = document.getElementById("collection-products");
+
+      // Show loading state
+      productContainer.innerHTML = "<p>Loading products...</p>";
+
+      fetch(`/collections/${collectionHandle}/products.json`)
+  .then((response) => {
+    console.log('Response:', response);  // Debug: Log the raw response
+    return response.json();
+  })
+  .then((data) => {
+    console.log('Data:', data);  // Debug: Log the parsed JSON data
+    productContainer.innerHTML = ""; // Clear old products
+
+    data.products.forEach((product) => {
+      let productHTML = `
+        <div class="product-item">
+          <img src="${product.images[0].src}" alt="${product.title}">
+          <p>${product.title}</p>
+        </div>
+      `;
+      productContainer.innerHTML += productHTML;
+    });
+  })
+  .catch((error) => {
+    console.error('Error:', error);  // Log any error in the console
+    productContainer.innerHTML = "<p>Failed to load products. Try again.</p>";
+  });
+
+    });
+  });
+});
+</script>
+
+
+{% schema %}
+  {
+    "name": "SubCategory Collections",
+    "settings": [],
+    "presets": [
+      {
+        "name": "SubCategory Collections"
+      }
+    ]
+  }
+{% endschema %}

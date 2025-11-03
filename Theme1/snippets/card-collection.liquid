@@ -1,0 +1,227 @@
+{% comment %}
+  Renders a collection card
+
+  Accepts:
+  - card_collection: {Object} Collection Liquid object
+  - media_aspect_ratio: {String} Size of the product image card. Values are "square" and "portrait". Default is "square" (optional)
+  - columns: {Number}
+  - extend_height: {Boolean} Card height extends to available container space. Default: false (optional)
+  - wrapper_class: {String} Wrapper class for card (optional)
+  - placeholder_image: {String} Placeholder image when collection is empty (optional)
+
+  Usage:
+  {% render 'card-collection' %}
+{% endcomment %}
+
+{% style %}
+  .cardcliu{
+    width: 100% !important;
+    transiton: transform 0.5s ease !important;
+  }
+
+  .crdhyu{
+    border-radius: 24px !important;
+  }
+
+  .crdjio{
+    padding: 0 !important;
+    margin: 1rem 1.5rem 1rem 2rem !important;
+  }
+  .ichdj{
+    overflow: visible !important;
+    margin-top: .8rem !important;
+    margin-left: 0 !important;
+  }
+
+  .cardcliu:hover .ichdj{
+    transform: scale(1.05) !important;
+  }
+
+    .crfdg{
+  display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
+{% endstyle %}
+
+{%- liquid
+  assign ratio = 1
+  if card_collection.featured_image and media_aspect_ratio == 'portrait'
+    assign ratio = 0.8
+  elsif card_collection.featured_image and media_aspect_ratio == 'adapt'
+    assign ratio = card_collection.featured_image.aspect_ratio
+  endif
+  if ratio == 0 or ratio == null
+    assign ratio = 1
+  endif
+  assign card_color_scheme = settings.card_color_scheme
+  assign card_style = settings.card_style
+  if wrapper_class == null or wrapper_class == 'none'
+    assign card_color_scheme = settings.collection_card_color_scheme
+    assign card_style = settings.collection_card_style
+  endif
+-%}
+
+<div class="card-wrapper animate-arrow {% if wrapper_class and wrapper_class != 'none' %}{{ wrapper_class }}{% else %}collection-card-wrapper{% endif %}">
+  <div
+    class="
+      cardcliu
+      card
+      card--{{ card_style }}
+      {% if card_collection.featured_image %} card--media{% else %} card--text{% endif %}
+      {% if card_style == 'card' %} color-{{ card_color_scheme }} gradient{% endif %}
+      {% if extend_height %} card--extend-height{% endif %}
+      {% if card_collection.featured_image == nil and card_style == 'card' %} ratio{% endif %}
+    "
+    style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+  >
+    <div
+      class="card__inner crdhyu {% if card_style == 'standard' %}color-{{ card_color_scheme }} gradient{% endif %}{% if card_collection.featured_image or card_style == 'standard' %} ratio{% endif %}"
+      style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
+    >
+      {%- if card_collection.featured_image -%}
+        <div class="card__media crdhyu">
+          <div class="media media--transparent media--hover-effect">
+            {% if card_collection.metafields.custom.collection_video != blank %}
+  <img src="{{ card_collection.metafields.custom.collection_video | image_url }}" alt="Collection GIF" autoplay loop>
+  <!-- Fallback content if both video and GIF are blank -->
+{% comment %}
+            {% if card_collection.metafields.custom.collection_video != blank %}
+              <video autoplay loop muted>
+                <source src="{{ card_collection.metafields.custom.collection_video | file_url }}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              {% endcomment %}
+
+            {% else %}
+              <img
+                srcset="
+                  {%- if card_collection.featured_image.width >= 165 -%}{{ card_collection.featured_image | image_url: width: 165 }} 165w,{%- endif -%}
+                  {%- if card_collection.featured_image.width >= 330 -%}{{ card_collection.featured_image | image_url: width: 330 }} 330w,{%- endif -%}
+                  {%- if card_collection.featured_image.width >= 535 -%}{{ card_collection.featured_image | image_url: width: 535 }} 535w,{%- endif -%}
+                  {%- if card_collection.featured_image.width >= 750 -%}{{ card_collection.featured_image | image_url: width: 750 }} 750w,{%- endif -%}
+                  {%- if card_collection.featured_image.width >= 1000 -%}{{ card_collection.featured_image | image_url: width: 1000 }} 1000w,{%- endif -%}
+                  {%- if card_collection.featured_image.width >= 1500 -%}{{ card_collection.featured_image | image_url: width: 1500 }} 1500w,{%- endif -%}
+                  {%- if card_collection.featured_image.width >= 3000 -%}{{ card_collection.featured_image | image_url: width: 3000 }} 3000w,{%- endif -%}
+                  {{ card_collection.featured_image | image_url }} {{ card_collection.featured_image.width }}w
+                "
+                src="{{ card_collection.featured_image | image_url: width: 1500 }}"
+                sizes="
+                  (min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: columns }}px,
+                  (min-width: 750px) {% if columns > 1 %}calc((100vw - 10rem) / 2){% else %}calc(100vw - 10rem){% endif %},
+                  calc(100vw - 3rem)
+                "
+                alt="{{ card_collection.featured_image.alt | escape }}"
+                height="{{ card_collection.featured_image.height }}"
+                width="{{ card_collection.featured_image.width }}"
+                loading="lazy"
+                class="motion-reduce"
+              >
+            {% endif %}
+          </div>
+        </div>
+      {%- endif -%}
+      {%- if card_collection == blank -%}
+        <div class="card__media">
+          {{ placeholder_image | placeholder_svg_tag: 'placeholder-svg' }}
+        </div>
+      {%- else -%}
+        <div class="card__content">
+          <div class="card__information">
+            <h3 class="card__heading">
+              <a
+                {% if card_collection == blank %}
+                  role="link" aria-disabled="true"
+                {% else %}
+                  href="{{ card_collection.url }}"
+                {% endif %}
+                class="full-unstyled-link"
+              >
+                {%- if card_collection.title != blank -%}
+                  {{- card_collection.title | escape -}}
+                {%- else -%}
+                  {{ 'onboarding.collection_title' | t }}
+                {%- endif -%}
+                {%- if card_collection.description == blank -%}
+                  <span class="icon-wrap">{% render 'icon-arrow' %}</span>
+                {%- endif %}
+              </a>
+            </h3>
+            {%- if card_collection.description != blank -%}
+              <p class="card__caption">
+                {{- card_collection.description | strip_html | truncatewords: 12 -}}
+                <span class="icon-wrap">&nbsp;{% render 'icon-arrow' %}</span>
+              </p>
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endif -%}
+    </div>
+    {%- if card_collection != blank and card_style == 'card' or card_collection.featured_image -%}
+      <div class="card__content">
+        <div class="card__information crdjio">
+          <h3 class="card__heading">
+            <a
+              {% if card_collection == blank %}
+                role="link" aria-disabled="true"
+              {% else %}
+                href="{{ card_collection.url }}"
+              {% endif %}
+              class="full-unstyled-link crfdg"
+            >
+              {%- if card_collection.title != blank -%}
+                {{- card_collection.title | escape -}}
+              {%- else -%}
+                {{ 'onboarding.collection_title' | t }}
+              {%- endif -%}
+              {%- if card_collection.featured_image or card_collection.description == blank -%}
+                <span class="icon-wrap ichdj">
+                  {% comment %}{% render 'icon-arrow' %}{% endcomment %}
+
+                  <svg width="42" height="42" viewBox="0 0 56 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M52 24C52 37.2548 41.2548 31 28 31C14.7452 31 4 37.2548 4 24C4 10.7452 14.7452 0 28 0C41.2548 0 52 10.7452 52 24Z" fill="#555555"/>
+                    <g filter="url(#filter0_d_725_66)">
+                    <path d="M52 24.8911C52 11.6363 41.2548 24.8911 28 24.8911C14.7452 24.8911 4 11.6363 4 24.8911C4 38.1459 14.7452 48.8911 28 48.8911C41.2548 48.8911 52 38.1459 52 24.8911Z" fill="#131313"/>
+                    </g>
+                    <path d="M17.8009 24.5501C18.4711 24.6822 30.5326 24.5501 30.5326 24.5501V26.1355C30.5326 26.1355 18.4711 26.3996 17.8009 26.1355C17.1307 25.8714 16.3967 24.2731 17.8009 24.5501Z" fill="white"/>
+                    <path d="M26.9886 20.689C22.715 16.9299 34.8234 24.7372 37.3731 25.0437C39.9229 25.3503 22.7147 33.1227 26.9885 29.3637C31.2622 25.6046 31.2621 24.448 26.9886 20.689Z" fill="white"/>
+                    <defs>
+                    <filter id="filter0_d_725_66" x="0" y="19.0001" width="56" height="37.891" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                    <feOffset dy="4"/>
+                    <feGaussianBlur stdDeviation="2"/>
+                    <feComposite in2="hardAlpha" operator="out"/>
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_725_66"/>
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_725_66" result="shape"/>
+                    </filter>
+                    </defs>
+                  </svg>
+                </span>
+              {%- endif %}
+            </a>
+          </h3>
+          {%- if card_collection.featured_image == null and card_collection.description != blank -%}
+            <p class="card__caption">
+              {{- card_collection.description | strip_html | truncatewords: 12 -}}
+              <span class="icon-wrap">&nbsp;{% render 'icon-arrow' %}</span>
+            </p>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endif -%}
+    {%- if card_collection == blank -%}
+      <div class="card__content">
+        <div class="card__information">
+          <h3 class="card__heading card__heading--placeholder">
+            <a role="link" aria-disabled="true" class="full-unstyled-link">
+              {{ 'onboarding.collection_title' | t }}
+              <span class="icon-wrap">{% render 'icon-arrow' %}</span>
+            </a>
+          </h3>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
